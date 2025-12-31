@@ -61,15 +61,20 @@ byte getCharPattern(char c) {
     case 'H': return 0b00110111;
     case 'I': return 0b00110000;  // looks like 1
     case 'J': return 0b00111100;
+    case 'K': return 0b10000111;
     case 'L': return 0b00001110;
-    case 'N': return 0b00010101;  // lowercase n
+    case 'M': return 0b10010101;
+    case 'N': return 0b01110110;  // lowercase n
     case 'O': return 0b01111110;  // looks like 0
     case 'P': return 0b01100111;
-    case 'Q': return 0b01110011;
+    case 'Q': return 0b11110011;
     case 'R': return 0b00000101;  // lowercase r
     case 'S': return 0b01011011;  // looks like 5
-    case 'T': return 0b00001111;  // lowercase t
+    case 'T': return 0b00110001;  // lowercase t
     case 'U': return 0b00111110;
+    case 'V': return 0b00110110;  // lowercase u
+    case 'W': return 0b10011100;
+    case 'X': return 0b10110001;
     case 'Y': return 0b00111011;
     case 'Z': return 0b01101101;  // looks like 2
     
@@ -181,5 +186,105 @@ void setupDisplay() {
   writeRegister(REG_SHUTDOWN, 0x01);
 }
 
+#define NUM_DEVICES 3
 
+void writeDigit2(int device, int digit, byte value) {
+  digitalWrite(CS_PIN, LOW);
+
+  for (int d = NUM_DEVICES - 1; d >= 0; d--) {
+    if (d == device) {
+      SPI.transfer(digit);
+      SPI.transfer(value);
+    } else {
+      SPI.transfer(digit);
+      SPI.transfer(0x00);
+    }
+  }
+
+  digitalWrite(CS_PIN, HIGH);
+}
+
+void displayString2(String text) {
+  clearDisplay();
+
+  if (text.length() > 24) {
+    text = text.substring(0, 24);
+  }
+
+  // Fill from right to left across all 24 digits
+  for (int i = 0; i < text.length(); i++) {
+    int globalPos = i;                  // 0–23
+    int device = globalPos / 8;         // 0–2
+    int digit  = (globalPos % 8) + 1;   // 1–8
+
+    char c = text[text.length() - 1 - i];
+    writeDigit2(device, digit, getCharPattern(c));
+  }
+}
+
+void writeRegisterAll(byte reg, byte data) {
+  digitalWrite(CS_PIN, LOW);
+  for (int i = 0; i < 3; i++) {
+    SPI.transfer(reg);
+    SPI.transfer(data);
+  }
+  digitalWrite(CS_PIN, HIGH);
+}
+
+void setupDisplayAll() {
+  pinMode(CS_PIN, OUTPUT);
+  digitalWrite(CS_PIN, HIGH);
+
+  SPI.begin(CLK_PIN, -1, DATA_PIN, CS_PIN);
+
+  writeRegisterAll(REG_SHUTDOWN, 0x00);
+  writeRegisterAll(REG_DECODE_MODE, 0x00);
+  writeRegisterAll(REG_SCAN_LIMIT, 0x07);
+  writeRegisterAll(REG_INTENSITY, 0x08);
+  writeRegisterAll(REG_DISPLAY_TEST, 0x00);
+  clearDisplayAll();
+  writeRegisterAll(REG_SHUTDOWN, 0x01);
+}
+
+void clearDisplayAll() {
+  for (int digit = 1; digit <= 8; digit++) {
+    writeRegisterAll(digit, 0x00);
+  }
+}
+
+void writeRegisterDevice(int device, byte reg, byte data) {
+  digitalWrite(CS_PIN, LOW);
+
+  for (int d = 2; d >= 0; d--) {
+    if (d == device) {
+      SPI.transfer(reg);
+      SPI.transfer(data);
+    } else {
+      SPI.transfer(0x00);  // NOOP
+      SPI.transfer(0x00);
+    }
+  }
+
+  digitalWrite(CS_PIN, HIGH);
+}
+
+void displayStringAll(String text) {
+  clearDisplayAll();
+
+  if (text.length() > 24) {
+    text = text.substring(0, 24);
+  }
+
+  for (int i = 0; i < text.length(); i++) {
+    char c = text[i];
+    // char c = text[text.length() - 1 - i];
+
+    byte pattern = getCharPattern(c);
+
+    int device = i / 8;
+    int digit  = ((i % 8) + 1 - 9) * (-1);
+
+    writeRegisterDevice(device, digit, pattern);
+  }
+}
 

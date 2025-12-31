@@ -9,6 +9,7 @@
 #include "display.h"
 
 bool fetchWMATAPredictions();
+void getApiKey();
 
 // Shared data (declared, not defined)
 extern JsonArrayConst cachedTrains;

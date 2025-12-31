@@ -2,8 +2,8 @@
 
 
 
-
-const char* WMATA_API_KEY = 
+#define CONFIG_URL "https://johnmihal.com/subway-display-config.json"
+String WMATA_API_KEY = "";
 const char* STATION_CODE = "C04";  // Foggy bottom
 
 // ===== GLOBAL STORAGE (defined once) =====
@@ -11,6 +11,45 @@ StaticJsonDocument<4096> wmataDoc;
 JsonArrayConst cachedTrains;
 
 // ========================================
+
+void getApiKey() {
+  if (WiFi.status() != WL_CONNECTED) return;
+  
+  HTTPClient http;
+  http.begin(CONFIG_URL);
+  int httpCode = http.GET();
+  
+  if (httpCode == 200) {
+    String payload = http.getString();
+    
+    // Parse JSON
+    StaticJsonDocument<512> doc;
+    DeserializationError error = deserializeJson(doc, payload);
+    
+    if (!error) {
+      String newKey = doc["wmata_api_key"].as<String>();
+      
+
+      Serial.println("API key detected!");
+        
+      WMATA_API_KEY = newKey;
+      // prefs.begin("config", false);
+      // prefs.putString("apikey", WMATA_API_KEY);
+      // prefs.end();
+        
+      Serial.println("API key updated successfully!");
+      Serial.println(WMATA_API_KEY);
+    } else {
+      Serial.println("Config checked - no changes");
+    }
+    
+  } else {
+    Serial.printf("API Key not reached, check network: %d\n", httpCode);
+  }
+  
+  http.end();
+}
+
 
 bool fetchWMATAPredictions() {
   cachedTrains = JsonArrayConst(); // clear cache

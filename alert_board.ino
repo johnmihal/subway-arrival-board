@@ -8,13 +8,38 @@ void setup() {
 
   setupConnection();
 
-  setupDisplay();
+  // setupDisplay();
 
-  String text = "HELLO 12";
+  // String text = "hello";
 
-  displayString(text);
+  // displayString2(text);
 
-  
+  // getApiKey();
+
+  setupDisplayAll();
+
+  // writeRegisterDevice(0, 1, 0xFF);
+  // writeRegisterDevice(1, 1, 0x0F);
+  // writeRegisterDevice(2, 1, 0xF0);
+
+  // for (int d = 1; d <= 8; d++) {
+  //   writeRegisterDevice(0, d, 0xFF);
+  // }
+
+  // for (int d = 1; d <= 8; d++) {
+  //   writeRegisterDevice(1, d, 0x0F);
+  // }
+
+  // for (int d = 1; d <= 8; d++) {
+  //   writeRegisterDevice(2, d, 0xF0);
+  // }
+
+  String text = "efghijklmnopqrstuvwxyz";
+
+  displayStringAll(text);
+
+  Serial.println("done");
+
 }
 
 // Globals
@@ -30,7 +55,9 @@ void fetcher(){
     if (fetchWMATAPredictions()) {
       trainIndex = 0;
       Serial.println("Successfully got predictions");
-      Serial.println(cachedTrains[trainIndex]);
+      JsonVariantConst train = cachedTrains[trainIndex];
+      serializeJson(train, Serial);
+      Serial.println();
     } else{
       Serial.println("Failed to get predictions");
     }
@@ -40,24 +67,24 @@ void fetcher(){
 }
 
 void loop() {
-  fetcher();
+  // fetcher();
 
-  while (trainIndex < cachedTrains.size()) {
-    if (millis() - lastSwitch >= 5000 && cachedTrains.size() > 0) {
-      lastSwitch = millis();
+  // while (trainIndex < cachedTrains.size()) {
+  //   if (millis() - lastSwitch >= 5000 && cachedTrains.size() > 0) {
+  //     lastSwitch = millis();
 
-      JsonObjectConst train = cachedTrains[trainIndex];
+  //     JsonObjectConst train = cachedTrains[trainIndex];
 
-      const char* line = train["Line"] | "";
-      const char* dest = train["DestinationName"] | "";
-      const char* min  = train["Min"] | "";
+  //     const char* line = train["Line"] | "";
+  //     const char* dest = train["DestinationName"] | "";
+  //     const char* min  = train["Min"] | "";
 
 
-      Serial.println(String(line) + " " + dest + " " + min);
+  //     Serial.println(String(line) + " " + dest + " " + min);
 
-      displayScrollText(String(line) + " " + dest + " " + min);
-      trainIndex = trainIndex + 1;
-    }
-  }
+  //     displayScrollText(String(line) + " " + dest + " " + min);
+  //     trainIndex = trainIndex + 1;
+  //   }
+  // }
 }
 
