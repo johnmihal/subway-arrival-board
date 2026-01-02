@@ -2,6 +2,7 @@
 #include "connection.h"
 #include "display.h"
 #include "wmata.h"
+#include <cstring>
 
 void setup() {
   Serial.begin(115200);
@@ -14,25 +15,9 @@ void setup() {
 
   // displayString2(text);
 
-  // getApiKey();
+  getApiKey();
 
   setupDisplayAll();
-
-  // writeRegisterDevice(0, 1, 0xFF);
-  // writeRegisterDevice(1, 1, 0x0F);
-  // writeRegisterDevice(2, 1, 0xF0);
-
-  // for (int d = 1; d <= 8; d++) {
-  //   writeRegisterDevice(0, d, 0xFF);
-  // }
-
-  // for (int d = 1; d <= 8; d++) {
-  //   writeRegisterDevice(1, d, 0x0F);
-  // }
-
-  // for (int d = 1; d <= 8; d++) {
-  //   writeRegisterDevice(2, d, 0xF0);
-  // }
 
   String text = "efghijklmnopqrstuvwxyz";
 
@@ -44,10 +29,14 @@ void setup() {
 
 // Globals
 size_t trainIndex = 0;           // Which train to show next
-unsigned long lastSwitch = 0; 
-unsigned long lastFetch = 0;
+unsigned long lastDisplayUpdate = -5000; 
+unsigned long lastFetch = -300000;
 String display_text = "";
 int display_text_idx = 0;
+
+int display_idx_1 = 3;
+int display_idx_2 = 3;
+int display_idx_3 = 3;
 
 void fetcher(){
   if (millis() - lastFetch >= 30000) {
@@ -66,25 +55,144 @@ void fetcher(){
   }
 }
 
+void display(){
+  if (millis() - lastDisplayUpdate >= 2000 && cachedTrains.size() > 0) {
+    display_text = "";
+    lastDisplayUpdate = millis();
+
+    if (cachedTrains.size() >= 1){
+      JsonObjectConst train = cachedTrains[0];
+      const char* line = train["Line"] | "   ";
+      const char* dest = train["DestinationName"] | "   ";
+      const char* min  = train["Min"] | " ";
+
+      if (display_idx_1 >= strlen(dest)){
+        display_idx_1 = 3;
+      } else {
+        display_idx_1++;
+      }
+
+      if (strcmp(min, "BRD") == 0 || strcmp(min, "ARR") == 0) {
+        min = "0";
+      }
+
+      Serial.println(String(line) + " " + dest + " " + min);
+      if (strlen(min) > 1){
+        display_text += (String(line[0]) + " " + dest[display_idx_1-3] + dest[display_idx_1-2] + dest[display_idx_1-1] + dest[display_idx_1] + min);
+      } else {
+        display_text += (String(line[0]) + " " + dest[display_idx_1-3] + dest[display_idx_1-2] + dest[display_idx_1-1] + dest[display_idx_1] + " " + min);
+      }
+    } else {
+      display_text += "No Train";
+    }
+
+    if (cachedTrains.size() >= 2 ){
+      JsonObjectConst train = cachedTrains[1];
+      const char* line = train["Line"] | "";
+      const char* dest = train["DestinationName"] | "";
+      const char* min  = train["Min"] | "";
+
+
+      if (display_idx_2 >= strlen(dest)){
+        display_idx_2 = 3;
+      } else {
+        display_idx_2++;
+      }
+
+      if (strcmp(min, "BRD") == 0 || strcmp(min, "ARR") == 0) {
+        min = "0";
+      }
+
+
+      Serial.println(String(line) + " " + dest + " " + min);
+      if (strlen(min) > 1){
+        display_text += (String(line[0]) + " " + dest[display_idx_2-3] + dest[display_idx_2-2] + dest[display_idx_2-1] + dest[display_idx_2] + min);
+      } else {
+        display_text += (String(line[0]) + " " + dest[display_idx_2-3] + dest[display_idx_2-2] + dest[display_idx_2-1] + dest[display_idx_2] + " " + min);
+      }
+
+    } else {
+      display_text += "        ";
+    }
+
+    if (cachedTrains.size() >= 3){
+      JsonObjectConst train = cachedTrains[2];
+      const char* line = train["Line"] | "";
+      const char* dest = train["DestinationName"] | "";
+      const char* min  = train["Min"] | "";
+
+
+      if (display_idx_3 >= strlen(dest)){
+        display_idx_3 = 3;
+      } else {
+        display_idx_3++;
+      }
+
+      if (strcmp(min, "BRD") == 0 || strcmp(min, "ARR") == 0) {
+        min = "0";
+      }
+
+
+      Serial.println(String(line) + " " + dest + " " + min);
+      if (strlen(min) > 1){
+        display_text += (String(line[0]) + " " + dest[display_idx_3-3] + dest[display_idx_3-2] + dest[display_idx_3-1] + dest[display_idx_3] + min);
+      } else {
+        display_text += (String(line[0]) + " " + dest[display_idx_3-3] + dest[display_idx_3-2] + dest[display_idx_3-1] + dest[display_idx_3] + " " + min);
+      }
+
+    } else {
+      display_text += "        ";
+    }
+    Serial.println(display_text);
+
+    displayStringAll(display_text);
+    
+  }
+}
+
+
+void displayNew(){
+  if (millis() - lastDisplayUpdate >= 3000 && cachedTrains.size() > 0) {
+    display_text = "";
+    lastDisplayUpdate = millis();
+
+    for (size_t i = 0; i < cachedTrains.size(); ++i){
+      JsonObjectConst train = cachedTrains[i];
+
+      const char* line = train["Line"] | "";
+      const char* dest = train["DestinationName"] | "";
+      const char* min  = train["Min"] | "";
+
+
+      if (display_idx_3 >= strlen(dest)){
+        display_idx_3 = 3;
+      } else {
+        display_idx_3++;
+      }
+
+      if (strcmp(min, "BRD") == 0 || strcmp(min, "ARR") == 0) {
+        min = "0";
+      }
+
+      display_text += (String(line) + " " + dest + " " + min + " ");
+    }
+
+    if (display_text.length() - display_text_idx < 24){
+      display_text_idx = 0;
+    } else {
+      display_text = display_text.substring(display_text_idx);
+      display_text_idx++;
+    }
+
+    Serial.println(display_text);
+
+    displayStringAll(display_text);
+      
+  }
+}
+
 void loop() {
-  // fetcher();
-
-  // while (trainIndex < cachedTrains.size()) {
-  //   if (millis() - lastSwitch >= 5000 && cachedTrains.size() > 0) {
-  //     lastSwitch = millis();
-
-  //     JsonObjectConst train = cachedTrains[trainIndex];
-
-  //     const char* line = train["Line"] | "";
-  //     const char* dest = train["DestinationName"] | "";
-  //     const char* min  = train["Min"] | "";
-
-
-  //     Serial.println(String(line) + " " + dest + " " + min);
-
-  //     displayScrollText(String(line) + " " + dest + " " + min);
-  //     trainIndex = trainIndex + 1;
-  //   }
-  // }
+  fetcher();
+  display();
 }
 

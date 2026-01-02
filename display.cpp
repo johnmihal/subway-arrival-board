@@ -70,9 +70,9 @@ byte getCharPattern(char c) {
     case 'Q': return 0b11110011;
     case 'R': return 0b00000101;  // lowercase r
     case 'S': return 0b01011011;  // looks like 5
-    case 'T': return 0b00110001;  // lowercase t
+    case 'T': return 0b01000110;  // lowercase t
     case 'U': return 0b00111110;
-    case 'V': return 0b00110110;  // lowercase u
+    case 'V': return 0b00111110;  // lowercase u
     case 'W': return 0b10011100;
     case 'X': return 0b10110001;
     case 'Y': return 0b00111011;
